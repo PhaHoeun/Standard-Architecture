@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flutter Production Architecture Guide</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 16mm 14mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 8.5pt;
+        color: #718096;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1a202c;
+      background: #ffffff;
+      line-height: 1.5;
+      font-size: 9.8pt;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header-banner {
+      border-bottom: 2.5px solid #2563eb;
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .badge-primary {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+
+    h1 {
+      font-size: 20pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 2px 0 6px 0;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 10pt;
+      color: #475569;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 12.5pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #2563eb;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    /* Diagram / Architecture Callout */
+    .diagram-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #2563eb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 12px 0;
+      page-break-inside: avoid;
+    }
+
+    .diagram-layer {
+      margin-bottom: 6px;
+    }
+
+    .layer-title {
+      font-weight: 700;
+      font-size: 9.5pt;
+      color: #0f172a;
+    }
+
+    .layer-desc {
+      font-size: 8.5pt;
+      color: #475569;
+    }
+
+    /* Chain Card */
+    .chain-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+
+    .chain-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .chain-title {
+      font-weight: 700;
+      font-size: 9.5pt;
+      color: #0f172a;
+    }
+
+    .chain-badge {
+      font-size: 7.5pt;
+      font-weight: 600;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .chain-meta {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px 0;
+      font-size: 8.8pt;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 8.5pt;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 1px 3px;
+      border-radius: 3px;
+      border: 1px solid #e2e8f0;
+    }
+
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 8.2pt;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+      line-height: 1.4;
+      margin: 4px 0 6px 0;
+      page-break-inside: avoid;
+    }
+
+    .arrow-divider {
+      text-align: center;
+      color: #2563eb;
+      font-weight: 800;
+      font-size: 11pt;
+      margin: 2px 0 8px 0;
+    }
+
+    .callout {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 12px 0;
+      page-break-inside: avoid;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 4px;
+      font-size: 9pt;
+    }
+
+    .callout p {
+      margin: 0;
+      font-size: 8.5pt;
+      color: #1e3a8a;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <div class="header-banner">
+    <div class="badge-row">
+      <span class="badge badge-primary">Standard Architecture</span>
+      <span class="badge badge-secondary">Flutter 3.x & Dart 3.x</span>
+      <span class="badge badge-secondary">Riverpod Code Gen & Freezed</span>
+    </div>
+    <h1>Flutter Architecture & Dependency Guide</h1>
+    <p class="subtitle">Complete reference to Feature-First Clean Architecture, dependency injection chains, and state flow</p>
+  </div>
+
+  <!-- Big Picture -->
+  <h2>1. Architectural Mental Model (The 3 Layers)</h2>
+  <div class="diagram-box">
+    <div class="diagram-layer">
+      <span class="layer-title">1. Presentation Layer (UI & State)</span><br>
+      <span class="layer-desc">Flutter widgets (<code>ConsumerWidget</code>) and Riverpod Notifiers (<code>AsyncNotifier</code>). Reactively binds to state. Contains <strong>zero</strong> direct HTTP or SQL logic.</span>
+    </div>
+    <div class="arrow-divider">▼ calls contracts defined in</div>
+    <div class="diagram-layer">
+      <span class="layer-title">2. Domain Layer (Pure Dart Business Rules)</span><br>
+      <span class="layer-desc">Pure Entities and Abstract Repository Interfaces. <strong>Zero external framework imports</strong> (no Flutter, no Dio, no Riverpod).</span>
+    </div>
+    <div class="arrow-divider">▲ implemented by</div>
+    <div class="diagram-layer">
+      <span class="layer-title">3. Data Layer (Data Retrieval & Serialization)</span><br>
+      <span class="layer-desc">Dio HTTP client, Freezed Models (DTOs), and Repository Implementations that convert raw JSON into pure Domain Entities.</span>
+    </div>
+  </div>
+
+  <!-- The Dependency Chain (NEW SECTION) -->
+  <h2>2. The Complete Dependency Chain: Who Uses What?</h2>
+  <p>
+    In Riverpod Clean Architecture, components connect through a clear, predictable chain of <strong>injections</strong>. Here is the exact path:
+  </p>
+
+  <!-- Step 1 -->
+  <div class="chain-card">
+    <div class="chain-header">
+      <span class="chain-title">Step 1: <code>dioProvider</code> ➔ used in <code>PostRemoteDataSource</code></span>
+      <span class="chain-badge">Infrastructure Level</span>
+    </div>
+    <div class="chain-meta">
+      <strong>Defined in:</strong> <code>lib/core/network/dio_provider.dart</code><br>
+      <strong>Consumed in:</strong> <code>lib/features/posts/data/datasources/post_remote_data_source.dart</code>
+    </div>
+    <pre>@riverpod
+PostRemoteDataSource postRemoteDataSource(Ref ref) {
+  final dio = ref.watch(dioProvider); // 🔗 INJECTION: Reads shared Dio instance
+  return PostRemoteDataSource(dio: dio);
+}</pre>
+  </div>
+
+  <div class="arrow-divider">▼</div>
+
+  <!-- Step 2 -->
+  <div class="chain-card">
+    <div class="chain-header">
+      <span class="chain-title">Step 2: <code>postRemoteDataSourceProvider</code> ➔ used in <code>PostRepositoryImpl</code></span>
+      <span class="chain-badge">Data Layer</span>
+    </div>
+    <div class="chain-meta">
+      <strong>Defined in:</strong> <code>lib/features/posts/data/datasources/post_remote_data_source.dart</code><br>
+      <strong>Consumed in:</strong> <code>lib/features/posts/data/repositories/post_repository_impl.dart</code>
+    </div>
+    <pre>@riverpod
+PostRepository postRepository(Ref ref) {
+  final remoteDataSource = ref.watch(postRemoteDataSourceProvider); // 🔗 INJECTION
+  return PostRepositoryImpl(remoteDataSource: remoteDataSource);
+}</pre>
+  </div>
+
+  <div class="arrow-divider">▼</div>
+
+  <!-- Step 3 -->
+  <div class="chain-card">
+    <div class="chain-header">
+      <span class="chain-title">Step 3: <code>postRepositoryProvider</code> ➔ used in <code>PostsController</code></span>
+      <span class="chain-badge">Controller Level</span>
+    </div>
+    <div class="chain-meta">
+      <strong>Defined in:</strong> <code>lib/features/posts/data/repositories/post_repository_impl.dart</code><br>
+      <strong>Consumed in:</strong> <code>lib/features/posts/presentation/controllers/posts_controller.dart</code>
+    </div>
+    <pre>@riverpod
+class PostsController extends _$PostsController {
+  @override
+  FutureOr&lt;List&lt;Post&gt;&gt; build() async {
+    final repository = ref.watch(postRepositoryProvider); // 🔗 INJECTION
+    return repository.getPosts(); // Returns pure domain entities!
+  }
+}</pre>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Step 4 -->
+  <div class="chain-card">
+    <div class="chain-header">
+      <span class="chain-title">Step 4: <code>postsControllerProvider</code> ➔ used in <code>PostsScreen</code> (Widget)</span>
+      <span class="chain-badge">Presentation Level</span>
+    </div>
+    <div class="chain-meta">
+      <strong>Defined in:</strong> <code>lib/features/posts/presentation/controllers/posts_controller.dart</code><br>
+      <strong>Consumed in:</strong> <code>lib/features/posts/presentation/screens/posts_screen.dart</code>
+    </div>
+    <pre>class PostsScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 🔗 OBSERVATION: Watches controller and rebuilds when state changes
+    final postsAsync = ref.watch(postsControllerProvider);
+
+    return postsAsync.when(
+      data: (posts) =&gt; ListView.builder(itemCount: posts.length, ...),
+      loading: () =&gt; const Center(child: CircularProgressIndicator()),
+      error: (err, stack) =&gt; Text('Error: $err'),
+    );
+  }
+}</pre>
+  </div>
+
+  <div class="arrow-divider">▼</div>
+
+  <!-- Step 5 -->
+  <div class="chain-card">
+    <div class="chain-header">
+      <span class="chain-title">Step 5: <code>PostsScreen</code> ➔ registered in <code>app_router.dart</code></span>
+      <span class="chain-badge">Navigation Level</span>
+    </div>
+    <div class="chain-meta">
+      <strong>Defined in:</strong> <code>lib/features/posts/presentation/screens/posts_screen.dart</code><br>
+      <strong>Consumed in:</strong> <code>lib/core/router/app_router.dart</code>
+    </div>
+    <pre>@riverpod
+GoRouter goRouter(Ref ref) {
+  return GoRouter(
+    routes: [
+      GoRoute(path: '/', builder: (context, state) =&gt; const PostsScreen()), // 🔗 ROUTE
+      GoRoute(path: 'posts/:id', builder: (context, state) =&gt; PostDetailScreen(...)),
+    ],
+  );
+}</pre>
+  </div>
+
+  <div class="arrow-divider">▼</div>
+
+  <!-- Step 6 -->
+  <div class="chain-card">
+    <div class="chain-header">
+      <span class="chain-title">Step 6: <code>goRouterProvider</code> ➔ consumed in <code>App</code> (Root)</span>
+      <span class="chain-badge">App Root</span>
+    </div>
+    <div class="chain-meta">
+      <strong>Defined in:</strong> <code>lib/core/router/app_router.dart</code><br>
+      <strong>Consumed in:</strong> <code>lib/app.dart</code>
+    </div>
+    <pre>class App extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(goRouterProvider); // 🔗 INJECTION: Supplies router to MaterialApp
+    return MaterialApp.router(routerConfig: router, theme: AppTheme.lightTheme);
+  }
+}</pre>
+  </div>
+
+  <!-- Cross Feature Communication -->
+  <h2>3. Cross-Feature Communication: Feature A ➔ Feature B</h2>
+  <p>
+    How do two different features share state without tightly coupling their code?
+  </p>
+  <div class="diagram-box">
+    <div style="font-weight: 700; color: #1e40af; margin-bottom: 4px;">Shared Provider: <code>favoritesControllerProvider</code></div>
+    <div style="font-size: 8.8pt; color: #475569;">
+      Defined in: <code>features/posts/presentation/controllers/favorites_controller.dart</code><br>
+      • Watched in <strong>Feature 1</strong> (<code>PostCard</code> in <code>features/posts</code>) for the Bookmark Star Button.<br>
+      • Watched in <strong>Feature 2</strong> (<code>ProfileScreen</code> in <code>features/auth</code>) for the "Saved Posts (3)" Counter.
+    </div>
+    <pre style="margin-top: 6px;">// In features/auth/presentation/screens/profile_screen.dart:
+final authState = ref.watch(authControllerProvider);
+// 🔗 Cross-feature read:
+final favoriteCount = ref.watch(favoritesControllerProvider).length;</pre>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="page-break"></div>
+  <h2>4. Data Transformation Chain: From JSON to Pixels</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Layer</th>
+        <th style="width: 35%;">Data Shape & Code</th>
+        <th style="width: 40%;">Why It Changes Here</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Backend API</strong></td>
+        <td><code>{"id": 1, "userId": 1, "title": "..."}</code></td>
+        <td>Raw network JSON string over HTTP.</td>
+      </tr>
+      <tr>
+        <td><strong>2. Data Source</strong></td>
+        <td><code>PostModel.fromJson(json)</code> (Freezed DTO)</td>
+        <td>Deserializes JSON with safe fallbacks (<code>@Default('')</code>) and null-safety.</td>
+      </tr>
+      <tr>
+        <td><strong>3. Repository</strong></td>
+        <td><code>model.toEntity()</code> ➔ <code>Post</code> (Domain)</td>
+        <td>Converts DTO into clean, immutable business entity. Shields UI from API changes.</td>
+      </tr>
+      <tr>
+        <td><strong>4. Controller</strong></td>
+        <td><code>AsyncData&lt;List&lt;Post&gt;&gt;</code></td>
+        <td>Riverpod wraps data in loading/error/data states for the UI.</td>
+      </tr>
+      <tr>
+        <td><strong>5. Widget / Screen</strong></td>
+        <td><code>Text(post.title)</code></td>
+        <td>Rendered onto the screen inside Material widgets.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Section 5 -->
+  <h2>5. Complete Directory & File Reference</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">File</th>
+        <th style="width: 25%;">Who Defines It</th>
+        <th style="width: 25%;">Who Uses It</th>
+        <th style="width: 25%;">Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>core/network/dio_provider.dart</code></td>
+        <td><code>dioProvider</code></td>
+        <td>Every <code>RemoteDataSource</code></td>
+        <td>Shared HTTP client with timeouts & base URL.</td>
+      </tr>
+      <tr>
+        <td><code>core/router/app_router.dart</code></td>
+        <td><code>goRouterProvider</code></td>
+        <td><code>app.dart</code></td>
+        <td>Deep linking and route navigation.</td>
+      </tr>
+      <tr>
+        <td><code>domain/entities/post.dart</code></td>
+        <td><code>Post</code> class</td>
+        <td>Repositories, Controllers, UI</td>
+        <td>Pure business object with zero dependencies.</td>
+      </tr>
+      <tr>
+        <td><code>domain/repositories/post_repository.dart</code></td>
+        <td>Abstract Interface</td>
+        <td>Controllers, Repositories Impl</td>
+        <td>Defines contract. Enables mock unit tests.</td>
+      </tr>
+      <tr>
+        <td><code>data/models/post_model.dart</code></td>
+        <td>Freezed <code>PostModel</code></td>
+        <td>Data sources & Repositories</td>
+        <td>JSON serialization and <code>.toEntity()</code> mapping.</td>
+      </tr>
+      <tr>
+        <td><code>data/datasources/post_remote_data_source.dart</code></td>
+        <td><code>postRemoteDataSourceProvider</code></td>
+        <td><code>postRepositoryProvider</code></td>
+        <td>Executes raw HTTP calls using Dio.</td>
+      </tr>
+      <tr>
+        <td><code>data/repositories/post_repository_impl.dart</code></td>
+        <td><code>postRepositoryProvider</code></td>
+        <td><code>postsControllerProvider</code></td>
+        <td>Coordinates data sources and maps models to entities.</td>
+      </tr>
+      <tr>
+        <td><code>presentation/controllers/posts_controller.dart</code></td>
+        <td><code>postsControllerProvider</code></td>
+        <td><code>PostsScreen</code></td>
+        <td>Manages feed state, search filters, and refresh.</td>
+      </tr>
+      <tr>
+        <td><code>presentation/screens/posts_screen.dart</code></td>
+        <td><code>PostsScreen</code> Widget</td>
+        <td><code>app_router.dart</code></td>
+        <td>Full page scaffold observing controller state.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Recipe -->
+  <h2>6. Recipe: How to Build Any New Feature</h2>
+  <div class="callout">
+    <div class="callout-title">The 5-Step Formula for New Features (e.g. <code>features/notifications/</code>):</div>
+    <p>
+      <strong>1. Domain:</strong> Define <code>NotificationItem</code> entity and abstract <code>NotificationRepository</code>.<br>
+      <strong>2. Data:</strong> Create <code>NotificationModel</code> (Freezed), <code>NotificationRemoteDataSource</code> (Dio), and <code>NotificationRepositoryImpl</code>.<br>
+      <strong>3. Controller:</strong> Create <code>NotificationsController</code> with <code>@riverpod</code>.<br>
+      <strong>4. Presentation:</strong> Build <code>NotificationsScreen</code> (ConsumerWidget) and add route to <code>app_router.dart</code>.<br>
+      <strong>5. Code Gen:</strong> Run <code>dart run build_runner build</code>.
+    </p>
+  </div>
+
+</body>
+</html>

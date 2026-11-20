@@ -1,0 +1,25 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'auth_user_model.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_AuthUserModel _$AuthUserModelFromJson(Map<String, dynamic> json) =>
+    _AuthUserModel(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      email: json['email'] as String,
+      username: json['username'] as String,
+      avatarUrl: json['avatarUrl'] as String? ?? '',
+    );
+
+Map<String, dynamic> _$AuthUserModelToJson(_AuthUserModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'email': instance.email,
+      'username': instance.username,
+      'avatarUrl': instance.avatarUrl,
+    };
